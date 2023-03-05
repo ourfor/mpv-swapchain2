@@ -473,8 +473,10 @@ uwp = cc.find_library('windowsapp', required: uwp_opt)
 features += {'uwp': uwp.found()}
 if features['uwp']
     dependencies += uwp
-    path_source = files('osdep/path-uwp.c')
-    subprocess_source = []
+    sources += files('osdep/path-uwp.c')
+    d3d11lib = cc.find_library('d3d11', required: uwp_opt)
+    dependencies += d3d11lib
+    flags += ['-D__WINRT__=1']
 endif
 
 features += {'win32-executable': win32 and get_option('cplayer')}
@@ -484,7 +486,7 @@ if win32
                      'osdep/windows_utils.c')
 endif
 
-features += {'win32-desktop': win32 and not uwp.found()}
+features += {'win32-desktop': win32}
 if features['win32-desktop']
     win32_desktop_libs = [cc.find_library('avrt'),
                           cc.find_library('dwmapi'),
@@ -993,7 +995,9 @@ d3d11 = get_option('d3d11').require(
 features += {'d3d11': d3d11.allowed()}
 if features['d3d11']
     sources += files('video/out/d3d11/context.c',
-                     'video/out/d3d11/ra_d3d11.c')
+                     'video/out/d3d11/ra_d3d11.c',
+                     'video/out/d3d11/libmpv_swapchain.c',
+                     'video/out/d3d11/libmpv_helper.c')
 endif
 
 wayland = {
@@ -1734,7 +1738,8 @@ if get_option('libmpv')
                  description: 'mpv media player client library')
 
     headers = ['libmpv/client.h', 'libmpv/render.h',
-               'libmpv/render_gl.h', 'libmpv/stream_cb.h']
+               'libmpv/render_gl.h', 'libmpv/stream_cb.h',
+               'libmpv/render_swapchain.h']
     install_headers(headers, subdir: 'mpv')
 
     # Allow projects to build with libmpv by cloning into ./subprojects/mpv
